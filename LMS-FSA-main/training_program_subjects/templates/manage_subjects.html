@@ -1,0 +1,16 @@
+<!-- training_program_subjects/templates/training_program_subjects/manage_subjects.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Subjects</title>
+</head>
+<body>
+    <h1>Manage Subjects for {{ program.name }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+    <a href="{% url 'training_program_list' %}">Back to Training Programs</a>
+</body>
+</html>
