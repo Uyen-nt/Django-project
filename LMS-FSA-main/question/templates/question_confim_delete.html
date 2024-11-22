@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Delete Question{% endblock %}
-
+{% load question_form_filters %}
 {% block content %}
 <div class="container mt-5">
     <h2 class="mb-4">Are you sure you want to delete the question "{{ question.question_text }}"?</h2>
@@ -9,7 +9,7 @@
     <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Delete</button>
-        <a href="{% url 'question_list' %}" class="btn btn-secondary">Cancel</a>
+        <a href="{% url 'question:question_list' %}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 {% endblock %}

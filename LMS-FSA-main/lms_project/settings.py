@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -55,7 +55,11 @@ INSTALLED_APPS = [
     'question',
     # 'quiz',
     'user_module',
-    'django_extensions',
+    'class',
+    'quiz',
+    'tools',
+    'study',
+
 ]
 
 
@@ -117,32 +121,31 @@ WSGI_APPLICATION = 'lms_project.wsgi.application'
 # }
 
 
-'''
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'hcmuafdb',
-        'USER': 'root',
-        'PASSWORD': 'mysqlojt',
-        'HOST': 'hcmuafserver.database.windows.net',
-        'PORT': '1433',
-        'OPTIONS': {
-            'driver': 'ODBC Driver 18 for SQL Server',
-            'encrypt': True,
-            'trustServerCertificate': False,
-        },
-    }
-}
-'''
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'mssql',
+#         'NAME': 'hcmuafdb',
+#         'USER': 'ngattt',
+#         'PASSWORD': 'fsa@123456',
+#         'HOST': 'hcmuafserver.database.windows.net',
+#         'PORT': '1433',
+#         'OPTIONS': {
+#             'driver': 'ODBC Driver 18 for SQL Server',
+#             'encrypt': True,
+#             'trustServerCertificate': False,
+#         },
+#     }
+# }
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'hcmuafdb',
-        'USER': 'root',
-        'PASSWORD': 'mysqlojt',
-        'HOST': 'localhost',  # or the hostname where your MySQL server is running
-        'PORT': '3306',      # or the port on which your MySQL server is listening
+        'NAME': 'appquiz',  # Tên cơ sở dữ liệu mà bạn đã tạo
+        'USER': 'root',     # Tên người dùng MySQL
+        'PASSWORD': 'TinNT171@437',  # Mật khẩu của MySQL
+        'HOST': 'localhost',           # Hoặc địa chỉ IP của máy chủ MySQL
+        'PORT': '3306',                # Cổng mặc định của MySQL là 3306
     }
 }
 
@@ -207,3 +210,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+LOGIN_REDIRECT_URL = '/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
+{% load main_form_filters %}
+
 
 {% block title %}Login{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Login</h2>
+    <h2>Login với username la Tin pass là tuitentin </h2>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}

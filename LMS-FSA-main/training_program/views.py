@@ -18,7 +18,7 @@ def manage_subjects(request, program_id):
             TrainingProgramSubjects.objects.filter(program=program).delete()
             for subject in selected_subjects:
                 TrainingProgramSubjects.objects.create(program=program, subject=subject)
-            return redirect('training_program_list')
+            return redirect('training_program:training_program_list')
     else:
         form = TrainingProgramSubjectsForm(instance=program)
 

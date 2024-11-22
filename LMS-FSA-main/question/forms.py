@@ -1,5 +1,5 @@
 from django import forms
-from .models import Question, Answer, Category, Subject  
+from .models import Question, Answer, Category
 from django.forms import modelformset_factory, inlineformset_factory
 
 # Form for creating and editing questions
@@ -7,9 +7,6 @@ class QuestionForm(forms.ModelForm):
     class Meta:
         model = Question
         fields = ['subject', 'category', 'question_text']
-
-    subject = forms.ModelChoiceField(queryset=Subject.objects.all(), required=False)
-    category = forms.ModelChoiceField(queryset=Category.objects.all(), required=False)
 
 # Form for creating and editing answers
 class AnswerForm(forms.ModelForm):

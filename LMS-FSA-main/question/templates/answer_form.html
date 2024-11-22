@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% load question_form_filters %}
 
+{% load question_form_filters %}
 {% block title %}Add Answer{% endblock %}
 
 {% block content %}
@@ -10,14 +10,14 @@
         {% csrf_token %}
         <div class="form-group">
             <label for="{{ form.text.id_for_label }}">Text</label>
-            {{ form.text|add_question_class:"form-control" }}
+            {{ form.text|add_class:"form-control" }}
         </div>
         <div class="form-group">
             <label for="{{ form.is_correct.id_for_label }}">Is Correct</label>
-            {{ form.is_correct|add_question_class:"form-check-input" }}
+            {{ form.is_correct|add_class:"form-check-input" }}
         </div>
         <button type="submit" class="btn btn-primary">Save</button>
-        <a href="{% url 'question_detail' question.pk %}" class="btn btn-secondary">Back to Question</a>
+        <a href="{% url 'question:question_detail' question.pk %}" class="btn btn-secondary">Back to Question</a>
     </form>
 </div>
 {% endblock %}

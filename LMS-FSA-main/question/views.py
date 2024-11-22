@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Question, Answer
 from .forms import QuestionForm, AnswerForm
 from module_group.models import ModuleGroup
-from category.models import Category
 
 # Question views
 def question_list(request):
@@ -36,7 +35,7 @@ def question_add(request):
     else:
         question_form = QuestionForm()
     return render(request, 'question_add.html', {'question_form': question_form})
-
+#return redirect('question_list')
 def question_edit(request, pk):
     question = get_object_or_404(Question, pk=pk)
     if request.method == 'POST':
@@ -53,9 +52,83 @@ def question_delete(request, pk):
     if request.method == 'POST':
         question.delete()
         return redirect('question:question_list')
-    return render(request, 'question_confirm_delete.html', {'question': question})
+    return render(request, 'question:question_confirm_delete.html', {'question': question})
 
+def answer_add(request, pk):
+    question = get_object_or_404(Question, pk=pk)
+    
+    if request.method == 'POST':
+        answer_form = AnswerForm(request.POST)
+        if answer_form.is_valid():
+            answer = answer_form.save(commit=False)
+            answer.question = question
+            answer.save()
+            return redirect('question:question_detail', pk=pk)
+    else:
+        answer_form = AnswerForm()
+    
+    return render(request, 'answer_add.html', {'answer_form': answer_form, 'question': question})
 
+# def answer_add(request, pk):
+#     question = get_object_or_404(Question, pk=pk)
+    
+#     if request.method == 'POST':
+#         answer_form = AnswerForm(request.POST)
+#         if answer_form.is_valid():
+#             answer = answer_form.save(commit=False)
+#             answer.question = question
+#             answer.save()
+#             return redirect('question:question_detail', pk=pk)
+#     else:
+#         answer_form = AnswerForm()
+    
+#     return render(request, 'answer_form.html', {'form': answer_form, 'question': question})
+# def answer_edit(request, question_pk, answer_pk):
+#     question = get_object_or_404(Question, pk=question_pk)
+#     answer = get_object_or_404(Answer, pk=answer_pk)
+    
+#     if request.method == 'POST':
+#         answer_form = AnswerForm(request.POST, instance=answer)
+#         if answer_form.is_valid():
+#             answer_form.save()
+#             return redirect('question:question_detail', pk=question_pk)
+#     else:
+#         answer_form = AnswerForm(instance=answer)
+    
+#     return render(request, 'answer_form.html', {'form': answer_form, 'question': question})
+
+# def answer_delete(request, question_pk, answer_pk):
+#     question = get_object_or_404(Question, pk=question_pk)
+#     answer = get_object_or_404(Answer, pk=answer_pk)
+    
+#     if request.method == 'POST':
+#         answer.delete()
+#         return redirect('question:question_detail', pk=question_pk)
+    
+#     return render(request, 'answer_confirm_delete.html', {'answer': answer, 'question': question})
+# def answer_edit(request, question_pk, answer_pk):
+#     question = get_object_or_404(Question, pk=question_pk)
+#     answer = get_object_or_404(Answer, pk=answer_pk)
+    
+#     if request.method == 'POST':
+#         answer_form = AnswerForm(request.POST, instance=answer)
+#         if answer_form.is_valid():
+#             answer_form.save()
+#             return redirect('question:question_detail', pk=question_pk)
+#     else:
+#         answer_form = AnswerForm(instance=answer)
+    
+#     return render(request, 'answer_form.html', {'form': answer_form, 'question': question})
+
+# def answer_delete(request, question_pk, answer_pk):
+#     question = get_object_or_404(Question, pk=question_pk)
+#     answer = get_object_or_404(Answer, pk=answer_pk)
+    
+#     if request.method == 'POST':
+#         answer.delete()
+#         return redirect('question:question_detail', pk=question_pk)
+    
+#     return render(request, 'answer_confirm_delete.html', {'answer': answer, 'question': question})
 def answer_add(request, pk):
     question = get_object_or_404(Question, pk=pk)
     if request.method == 'POST':
@@ -67,4 +140,4 @@ def answer_add(request, pk):
             return redirect('question:question_detail', pk=pk)
     else:
         answer_form = AnswerForm()
-    return render(request, 'answer_add.html', {'answer_form': answer_form, 'question':question})
+    return render(request, 'answer_add.html', {'answer_form': answer_form,'question':question})

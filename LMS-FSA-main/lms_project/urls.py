@@ -34,6 +34,17 @@ urlpatterns = [
     path('subject/', include('subject.urls')),  
     path('training_program/', include('training_program.urls')),  
     path('training_program_subjects/', include('training_program_subjects.urls')),  
+    path('class/', include('class.urls')),
+    path('quiz/',include('quiz.urls')),
+    path('tools/',include('tools.urls')),
+    path('study/' , include('study.urls')),
+
+    
          
     # Add more paths for other new apps here
 ]
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
