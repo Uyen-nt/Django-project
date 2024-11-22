@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}  <!-- Load static files -->
+{% block title %}Assessment Challenge Solution{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<div>
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3"> <!-- Reduced bottom margin -->
+        <div class="mb-3"> <!-- Reduced bottom margin -->
+            <h1 class="mb-1">Result</h1> <!-- Reduced font size -->
+            <span style="font-size: 1rem;">
+                Viewing <span class="text-primary">{{ attempt.email }}</span>'s solution
+            </span>
+        </div>
+        <a href="{% url 'assessment:assessment_report' assessment.id attempt.id attempt.email %}" class="btn btn-outline-secondary" style="font-size: 0.875rem;">Back to Report</a> <!-- Reduced font size -->
+    </div>
+    <hr>
+     
+    <!-- Exercise and View Section -->
+    <div class="d-flex justify-content-between align-items-center border p-3 mb-3 bg-light rounded-3 shadow-sm" 
+        data-bs-toggle="collapse" 
+        data-bs-target="#exerciseDescription-{{ submission_attempt.id }}" 
+        aria-expanded="false" 
+        aria-controls="exerciseDescription-{{ submission_attempt.id }}"
+        style="cursor: pointer;">  <!-- Add cursor pointer for better UX -->
+
+        <span class="text-muted" style="font-size: 1.1rem;">
+            {% for a in submission_attempt %}
+            <b>{{ a.exercise.title }}</b>
+            
+        </span>
+
+        <!-- View question link styled as a button -->
+        <a href="#" class="text-decoration-none text-info" style="font-size: 0.9rem;">
+            <b>View question</b> 
+        </a>
+    </div>
+
+    <!-- Description Dropdown (hidden initially) -->
+    <div class="collapse" id="exerciseDescription-{{ submission_attempt.id }}">
+        <div class="card card-body rounded-3 shadow-sm">
+            <!-- Render HTML content from the description safely -->
+            <p>{{ a.exercise.description|safe }}</p>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!--Test cases-->
+    <div class="card mb-3 rounded-3 shadow-sm mt-3" style="background-color: #e9f5eb;"> <!-- Light green background -->
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <span class="badge rounded-pill bg-success me-2" style="font-size: 1rem; margin-left: 10px">0</span> <!-- Green pill badge -->
+                    <span style="font-weight: 500; color: #28a745; margin-left: 10px;">TOTAL POINTS</span> <!-- Added margin-left for spacing -->
+                </div>
+            </div>
+    
+            <hr class="my-3"> <!-- Separator -->
+    
+            <div class="d-flex justify-content-between align-items-center border p-3 mb-3 bg-light rounded-3 shadow-sm"
+                data-bs-toggle="collapse"
+                data-bs-target="#incorrectTestCases"
+                aria-expanded="false"
+                aria-controls="incorrectTestCases"
+                style="cursor: pointer;"> <!-- Add cursor pointer for better UX -->
+    
+                <div>
+                    {% for key, value in test_cases.items %}
+                    <span style="font-size: 1.2rem; color: #28a745; font-weight: bold; margin-left: 10px;">{{ key|capfirst }}: {{ value|length }}</span>
+                    {% endfor %}
+                </div>
+                <a href="#" class="text-decoration-none text-info" style="font-size: 0.9rem;">
+                    View test cases
+                </a>
+            </div>
+    
+            <!-- Dropdown for incorrect test cases -->
+            <div class="collapse" id="incorrectTestCases">
+                <div class="card card-body rounded-3 shadow-sm">
+                    <div class="d-flex">
+                        <!-- Phần bên trái -->
+                        <div class="w-50 pe-3">
+                            <h5>Test Cases</h5>
+                            <hr>
+                            {% for key, value in test_cases.items %}
+                                {% if key == 'test_cases' %}
+                                    {% for case in value %}
+                                        <div>
+                                            <p><strong>Input:</strong> {{ case.input }}</p>
+                                            <p><strong>Output:</strong> {{ case.expected_output }}</p>
+                                        </div>
+                                        <hr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+            
+                        <!-- Thanh phân tách -->
+                        <div class="vr mx-3" style="border-color: #e2dcdc;"></div>
+            
+                        <!-- Phần bên phải -->
+                        <div class="w-50 ps-3">
+                            <h5>Hidden Test Cases</h5>
+                            <hr>
+                            {% for key, value in test_cases.items %}
+                                {% if key == 'hidden_test_cases' %}
+                                    {% for case in value %}
+                                        <div>
+                                            <p><strong>Input:</strong> {{ case.input }}</p>
+                                            <p><strong>Output:</strong> {{ case.expected_output }}</p>
+                                        </div>
+                                        <hr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex flex-row border p-3 mb-3 bg-light rounded-3 shadow-sm">
+        <!-- Cột bên trái (Student Code) -->
+        <div class="d-flex flex-column" style="flex: 1; padding-right: 15px;"> 
+            <h5>Student Code</h5>
+            <div class="card card-body mt-2">
+                {% for a in submission_attempt %}
+                    <pre>{{ a.code }}</pre>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Thanh phân cách đứng -->
+        <div class="vr" style="height: 100%; width:auto"></div>
+    
+        <!-- Cột bên phải (Code Bên Phải) -->
+        <div class="d-flex flex-column" style="flex: 1; padding-left: 15px;">
+            <h5>Additional Code</h5>
+            <div class="card card-body mt-2">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
