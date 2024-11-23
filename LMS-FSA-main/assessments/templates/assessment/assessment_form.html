@@ -5,6 +5,7 @@
 {% block content %}
 <head>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <div class="container mt-4">
     <h2 class="text-center mb-4">{% if assessment %}Edit Assessment{% else %}Create New Assessment{% endif %}</h2>
@@ -76,17 +77,31 @@
                     <div class="tab-pane fade show active" id="exercises" role="tabpanel" aria-labelledby="exercises-tab">
                         <div class="row">
                             <div class="col-md-12">  <!-- Wrap both columns in a single column for search -->
-                                <div class="mb-3">
-                                    <div style="display: flex; align-items: center;">
-                                        <span style="margin-right: 5px;">🔍</span> 
+                                <div class="mb-3" style="display: flex; align-items: center;">
+                                    <!-- Select field for Language -->
+                                    <div style="flex: 0 0 auto; max-width: 80px; margin-right: 10px;">
+                                        <select name="language" id="id_language" class="form-select">
+                                            <option value="">All</option>  <!-- Option for all languages -->
+                                            {% for language in languages %}
+                                                <option value="{{ language.language }}" {% if assessment.language == language.language %}selected{% endif %}>
+                                                    {{ language.language|capfirst }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Search field -->
+                                    <div style="flex: 3; display: flex; align-items: center;">
+                                        <!--<span style="margin-right: 5px;">🔍</span>-->
                                         <input type="text" id="search-exercises" class="form-control" placeholder="Search for exercises..." onkeyup="filterExercises()">
-                                    </div>                                                             
+                                    </div>
                                 </div>
+                                
                             </div>  
                             <!-- Exercise List Section -->
                             <div class="col-md-6">
                                 <div class="mb-1">
-                                    <label for="search-exercises" class="form-label">Exercises</label>                           
+                                    <label for="search-exercises" class="form-label fw-bold text-dark border-bottom pb-1">Exercises</label>                          
                                 </div>
                                 <div class="exercise-list" id="exercise-list" style="height: 300px; overflow-y: auto; border: 1px solid #f5ebeb;">
                                     {% for exercise in exercises %} 
@@ -101,7 +116,7 @@
                                                     onmouseover="if (!this.classList.contains('active')) { this.classList.remove('text-secondary'); this.classList.add('text-primary'); }" 
                                                     onmouseout="if (!this.classList.contains('active')) { this.classList.remove('text-primary'); this.classList.add('text-secondary'); }"
                                                     onclick="toggleViewButton(this, {{ exercise.id }})">
-                                                    <i class="fas fa-eye"></i>
+                                                    <i class="bi bi-eye-slash"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -114,7 +129,7 @@
                             <div class="col-md-6">
                                 <div class="mb-1">
                                     <div class="mb-1">
-                                        <label for="search-exercises2" class="form-label">Preview Selected Exercise</label>                                       
+                                        <label for="search-exercises2" class="form-label fw-bold text-dark border-bottom pb-1">Preview Selected Exercise</label>                                       
                                     </div>                            
                                     <div id="exercise-content" class="border p-2" style="height: 300px; overflow-y: auto;">
                                         <p>Select an exercise from the list to preview its content here.</p>                                                                    
@@ -739,11 +754,13 @@
     // Function to filter exercises in the list
     function filterExercises() {
         const input = document.getElementById('search-exercises').value.toLowerCase();
+        const selectedLanguage = document.getElementById('id_language').value.toLowerCase();
         const exercises = document.querySelectorAll('.exercise-item');
         const filteredExercisesContainer = document.getElementById('filtered-exercises');
         filteredExercisesContainer.innerHTML = '';
 
-        if (input.trim() === "") {
+        if (input.trim() === "" && selectedLanguage === "") {
+            // Show all if both search and language filter are empty
             filteredExercisesContainer.style.display = 'none';
             document.getElementById('exercise-list').style.display = 'block';
             exercises.forEach(exercise => exercise.style.display = 'flex');
@@ -751,40 +768,81 @@
         }
 
         let filteredExercises = [];
-        let addedExerciseIds = new Set(); // Dùng Set để lưu ID của các exercise đã thêm
+        let addedExerciseIds = new Set();
 
         exercises.forEach(exercise => {
             const title = exercise.querySelector('label').textContent.toLowerCase();
-            const language = exercise.querySelector('.badge').textContent.toLowerCase();
-            const exerciseId = exercise.dataset.exerciseId; // Lấy ID của exercise
+            const exerciseLanguage = exercise.querySelector('.badge').textContent.toLowerCase();
+            const exerciseId = exercise.dataset.exerciseId;
 
-            // Kiểm tra nếu exercise đã được thêm hay chưa
-            if ((title.includes(input) || language.includes(input)) && !addedExerciseIds.has(exerciseId)) {
+            const titleMatches = title.includes(input);
+            const languageMatches = selectedLanguage === "" || exerciseLanguage === selectedLanguage;
+
+
+            if (titleMatches && languageMatches && !addedExerciseIds.has(exerciseId)) {
                 filteredExercises.push(exercise.cloneNode(true));
-                addedExerciseIds.add(exerciseId); // Thêm ID vào Set
+                addedExerciseIds.add(exerciseId);
             }
         });
 
 
         if (filteredExercises.length > 0) {
+        // Display the filtered results
             document.getElementById('exercise-list').style.display = 'none';
             filteredExercisesContainer.style.display = 'block';
             filteredExercises.forEach(exercise => filteredExercisesContainer.appendChild(exercise));
+
         } else {
-            filteredExercisesContainer.style.display = 'none';
+
+            if(input !== "" && selectedLanguage !== "")
+            {
             document.getElementById('exercise-list').style.display = 'block';
+            filteredExercisesContainer.style.display = 'none';
+
             exercises.forEach(exercise => {
-                const title = exercise.querySelector('label').textContent.toLowerCase();
-                const language = exercise.querySelector('.badge').textContent.toLowerCase();
-                if (title.includes(input) || language.includes(input)) {
-                    exercise.style.display = 'flex';
-                } else {
-                    exercise.style.display = 'none';
-                }
-            });
+                    const title = exercise.querySelector('label').textContent.toLowerCase();
+                    const languageBadge = exercise.querySelector('.badge');
+                    const exerciseLanguage = languageBadge ? languageBadge.textContent.toLowerCase() : '';
+                    if (title.includes(input) && exerciseLanguage.includes(selectedLanguage) ) {
+                        exercise.style.display = 'flex';
+                    } else {
+                        exercise.style.display = 'none';
+                    }
+                });
+            }
+            else if (selectedLanguage !== "") {
+            document.getElementById('exercise-list').style.display = 'block';
+            filteredExercisesContainer.style.display = 'none';
+                exercises.forEach(exercise => {
+                    const languageBadge = exercise.querySelector('.badge');
+                    const exerciseLanguage = languageBadge ? languageBadge.textContent.toLowerCase() : ''; // Get the language. Handle cases where the badge might not exist.
+
+                    if (exerciseLanguage === selectedLanguage) {
+                        exercise.style.display = 'flex';
+                    } else {
+                        exercise.style.display = 'none';
+                    }
+                });
+            }
+            else {
+
+                filteredExercisesContainer.style.display = 'none';
+                document.getElementById('exercise-list').style.display = 'block';
+                exercises.forEach(exercise => {
+                    const title = exercise.querySelector('label').textContent.toLowerCase();
+                    if (title.includes(input)) {
+                        exercise.style.display = 'flex';
+                    } else {
+                        exercise.style.display = 'none';
+                    }
+                });
+            }
+
         }
     }
 
+
+    document.getElementById('id_language').addEventListener('change', filterExercises);
     document.getElementById('search-exercises').addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
@@ -921,17 +979,22 @@
 
     // Hàm để chuyển đổi trạng thái nút và gọi viewExercise
     function toggleViewButton(button, exerciseId) {
+            const icon = button.querySelector('i');
             const isActive = button.classList.contains("active");
 
             if (isActive) {
                 // Nếu đã active, thì reset về trạng thái ban đầu
                 button.classList.remove("active", "text-primary");
                 button.classList.add("text-secondary");
+                icon.classList.remove("bi-eye");
+                icon.classList.add("bi-eye-slash");
                 viewExercise(null); // Đóng nội dung
             } else {
                 // Nếu chưa active, thì hiển thị nội dung
                 button.classList.add("active", "text-primary");
                 button.classList.remove("text-secondary");
+                icon.classList.remove("bi-eye-slash");
+                icon.classList.add("bi-eye");
                 viewExercise(exerciseId); // Hiển thị nội dung
             }
         }
@@ -945,7 +1008,6 @@
             }
         });
     });
-
 
 
 </script>

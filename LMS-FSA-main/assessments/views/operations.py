@@ -31,6 +31,8 @@ from django.utils.decorators import decorator_from_middleware
 from django.utils.decorators import decorator_from_middleware_with_args
 from cheat_logger.utils.encryption_handler import Data_Encryption
 import datetime
+import subprocess
+
 
 def no_cache(view):
     def no_cache_view(request, *args, **kwargs):
@@ -333,11 +335,22 @@ class Assessment_report(View):
             # Get the user's submissions
 
             print(f"attempt cuối cùng là :{attempt}")
-            user_submissions = Submission.objects.filter(
-                assessment=assessment, 
-                email=email
-            )
-            print(f"user_submissions là {user_submissions}")
+            try:
+            # Truy vấn tất cả các submission phù hợp
+                user_submissions = Submission.objects.filter(assessment_id=assessment_id, email=attempt.email)
+                if user_submissions.exists():
+                    if user_submissions.count() > 1:
+                        print(f"Found multiple submissions: {user_submissions}")
+                        # Chọn submission đầu tiên (hoặc có logic tùy chỉnh)
+                        submission_attempt = [a for a in user_submissions]
+                        submission_score = sum([a.score for a in user_submissions])/len(user_submissions)
+                        print(f"submission {submission_attempt}")
+                        print(f"submission score ís  {submission_score}")
+                    else:
+                        submission_attempt = user_submissions.get()
+                
+            except Exception as e:
+                print(f"Bug in submission query: {e}")
             # Calculate skill ratings for the specific attempt and assessment
             skill_ratings = {}
             for submission in user_submissions:
@@ -378,12 +391,136 @@ class Assessment_report(View):
                 'score_quiz': score_quiz,
                 'average_score': average_score,
                 'skill_ratings': skill_ratings,
+                'submission_attempt':submission_attempt
             }
             return render(request, 'assessment/assessment_report.html', context)
 
         except Exception as e:
             print(f"Error: {str(e)}")
             return render(request, 'assessment/error.html', {'error': 'Attempt not found. Please ensure you have provided a valid email.'})
+
+
+class Challenge_solution(View):
+    def get(self, request, assessment_id, attempt_id, email=None , submission_id=None):
+        print("Bắt đầu thực hiện AssessmentReportView")
+        assessment = get_object_or_404(Assessment, id=assessment_id)
+        attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id)
+        user_answers = UserAnswer.objects.filter(attempt=attempt)
+        
+        
+        try:
+            # Handle request based on user authentication and email
+            if request.user.is_authenticated:
+                attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, assessment_id=assessment)
+            if request.user.is_authenticated and email:
+                attempt = get_object_or_404(StudentAssessmentAttempt, id=attempt_id, email=email, assessment_id=assessment)
+            else:
+                raise Http404("No email provided for anonymous user.")
+
+            # Get the user's submissions
+
+            print(f"attempt cuối cùng là :{attempt}")
+            try:
+            # Truy vấn tất cả các submission phù hợp
+                user_submissions = Submission.objects.filter(assessment_id=assessment_id, email=attempt.email)
+                if user_submissions.exists():
+                    if user_submissions.count() > 1:
+                        print(f"Found multiple submissions: {user_submissions}")
+                        # Chọn submission đầu tiên (hoặc có logic tùy chỉnh)
+                        submission_attempt = [a for a in user_submissions]
+                        submission_score = sum([a.score for a in user_submissions])/len(user_submissions)
+                        print(f"submission {submission_attempt}")
+                        print(f"submission score ís  {submission_score}")
+                    else:
+                        submission_attempt = user_submissions.get()
+                
+            except Exception as e:
+                print(f"Bug in submission query: {e}")
+            # Calculate skill ratings for the specific attempt and assessment
+            skill_ratings = {}
+            for submission in user_submissions:
+                language = submission.exercise.language  # Language of the exercise
+                score = submission.score                 # Score for this exercise
+                print(f"languaga là {language} - và score là {score}")
+                if language not in skill_ratings:
+                    skill_ratings[language] = {'total_score': 0, 'count': 0}
+
+                # Sum scores and count exercises for this attempt
+                skill_ratings[language]['total_score'] += score
+                skill_ratings[language]['count'] += 1
+
+            # Calculate average score for each language
+            
+            for language, data in skill_ratings.items():
+                print(f"language is {language} and data is {data}")
+                data['average_score'] = data['total_score'] / data['count'] if data['count'] > 0 else 0
+
+                print(f"skill_ratings là {skill_ratings}")
+
+            # Overall scores for the attempt
+            if skill_ratings:
+                total_average_score = sum(data['average_score'] for data in skill_ratings.values()) / len(skill_ratings)
+                score_ass = total_average_score
+            else:
+                score_ass = 0
+            
+            score_quiz = attempt.score_quiz
+            average_score = (score_ass + score_quiz) / 2
+
+            context = {
+                'assessment': assessment,
+                'attempt': attempt,
+                'user_answers': user_answers,
+                'user_submissions': user_submissions,
+                'score_ass': score_ass,
+                'score_quiz': score_quiz,
+                'average_score': average_score,
+                'skill_ratings': skill_ratings,
+                'submission_attempt':submission_attempt
+            }
+            return render(request, 'assessment/assessment_solution.html', context)
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return render(request, 'assessment/error.html', {'error': 'Attempt not found. Please ensure you have provided a valid email.'})
+
+
+class RunCodeView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            user_input = data.get("input", "")
+            submission_id = data.get("submission_id")
+
+            # Retrieve the submission code
+            submission = get_object_or_404(Submission, id=submission_id)
+            code = submission.code
+
+            # Execute the code with the provided input
+            result = self.execute_code(code, user_input)
+
+            return JsonResponse(result)
+        except Exception as e:
+            return JsonResponse({"status": "error", "error": str(e)})
+
+    def execute_code(self, code, user_input):
+        try:
+            process = subprocess.run(
+                ["python3", "-c", code],
+                input=user_input,
+                text=True,
+                capture_output=True,
+                timeout=5
+            )
+            if process.returncode == 0:
+                return {"status": "success", "output": process.stdout.strip()}
+            else:
+                return {"status": "error", "error": process.stderr.strip()}
+        except subprocess.TimeoutExpired:
+            return {"status": "error", "error": "Execution timed out."}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+
 
 class Handle_anonymous_info(View):
     def get(self, request, invited_candidate_id):
@@ -490,6 +627,7 @@ class Assessment_invite_accept(View):
                     # "assessment:take_assessment",
                     kwargs={"assessment_id": invited_candidate.assessment.id},
                 )
+
                 query_params = urlencode({})
                 reverse_link_with_query_params = f"{reverse_link}?{query_params}"
 
@@ -503,9 +641,11 @@ class Assessment_invite_accept(View):
                     'assessment': assessment,
                     'invited_candidate_id': invited_candidate.id
                 })
+
         except (TypeError, ValueError, OverflowError, InvitedCandidate.DoesNotExist):
             messages.error(request, "This invitation link is invalid.")
             return redirect('assessment:assessment_list')  # Redirect as appropriate
+
 
 
 class Student_assessment_attempt(View):
@@ -524,3 +664,30 @@ class Student_assessment_attempt(View):
             attempt.save()
             messages.success(request, 'Your attempt has been recorded.')
             return redirect('assessment:assessment_detail', pk=assessment.id)
+
+
+class Copy_public_invite_link(View):
+    @method_decorator(login_required)
+    def get(self, request, pk):
+        try:
+            assessment = Assessment.objects.get(pk=pk)
+
+            # Tạo và lưu InvitedCandidate "dummy"
+            invited_candidate = InvitedCandidate.objects.create(
+                assessment=assessment, 
+                email=f"public_invite_{assessment.pk}@example.com"
+            )
+            invited_candidate.set_expiration_date(days=7)
+            invited_candidate.save()
+
+            token = invite_token_generator.make_token(invited_candidate)
+            uid = urlsafe_base64_encode(force_bytes(invited_candidate.pk))
+
+            invite_link = request.build_absolute_uri(
+                reverse('assessment:assessment_invite_accept', kwargs={'uidb64': uid, 'token': token})
+            )
+
+            return JsonResponse({'invite_link': invite_link})
+
+        except Assessment.DoesNotExist:
+            return JsonResponse({'error': 'Assessment not found'}, status=404)

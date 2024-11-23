@@ -71,6 +71,7 @@ class Assessment_create(View):
         paginator = Paginator(exercises, 5)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
+        languages = sorted(list(set(exercise.language for exercise in exercises)), key=lambda x: x.language)
 
         all_quizzes = Quiz.objects.annotate(total_questions=Count('questions'))
         quiz_questions = []
@@ -103,6 +104,7 @@ class Assessment_create(View):
             'selected_quiz': selected_quiz,
             'quiz_questions': quiz_questions,
             'total_questions_selected_quiz': total_questions_selected_quiz,
+            'languages': languages,
         })
 
     @method_decorator(login_required)
@@ -298,6 +300,7 @@ class Assessment_edit(View):
         # Fetch all available exercises and quizzes
         exercises = Exercise.objects.all()
         selected_exercises = assessment.exercises.values_list('id', flat=True)
+        languages = sorted(list(set(exercise.language for exercise in exercises)), key=lambda x: x.language)
 
         all_quizzes = Quiz.objects.annotate(total_questions=Count('questions'))
         quiz_questions = []
@@ -327,6 +330,7 @@ class Assessment_edit(View):
             'selected_quiz': selected_quiz,
             'quiz_questions': quiz_questions,
             'total_questions_selected_quiz': total_questions_selected_quiz,
+            'languages': languages,
         }
 
         return render(request, 'assessment/assessment_form.html', context)
